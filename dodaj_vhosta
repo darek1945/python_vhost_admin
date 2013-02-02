@@ -1,4 +1,4 @@
-#!/us/in/python
+#!/usr/bin/python
 import sys
 import io
 import sh
