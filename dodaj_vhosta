@@ -1,0 +1,75 @@
+#!/us/in/python
+import sys
+import io
+import sh
+import os
+
+
+
+KATALOG_TEMPLATEK= 'templates/'
+
+KATALOG_VHOSTOW = '/home/uslugi/apache2/www/'
+
+KATALOG_APACHE = '/etc/apache2/sites-available/'
+KATALOG_NGINX = '/etc/nginx/sites-available/'
+
+#KATALOG_APACHE = '/tmp/apache'
+#KATALOG_NGINX = '/tmp/'
+
+
+konf = {
+    '$katalog_domowy' : KATALOG_VHOSTOW ,
+    '$domena' : sys.argv[1],
+    '$$template_dir': KATALOG_TEMPLATEK
+}
+
+print sh.ls(KATALOG_NGINX)
+
+def replace_all(text, dic):
+    for i, j in dic.iteritems():
+        text = text.replace(i, j)
+    return text
+
+def dodawanie_katalogu(konf=konf):
+    os.mkdir(KATALOG_VHOSTOW + konf['$domena'])
+    os.mkdir(KATALOG_VHOSTOW + konf['$domena'] + '/public_html')
+    os.mkdir(KATALOG_VHOSTOW + konf['$domena'] + '/logs')
+    print 'Zrobilem katalog'
+    sh.ls(KATALOG_VHOSTOW)
+    print ' koniec'
+
+def nginx_vhost_file(konf=konf,nginx=KATALOG_NGINX):
+    #otwiera plika ze zmienej
+    config = io.open(nginx + konf['$domena'],'w')
+
+    #czyta linie z pliku
+    for line in io.open(konf['$$template_dir']+'nginx_php.tpl','r'):
+        line = replace_all(line,konf)
+        config.write(line)
+
+    config.close()
+
+
+def apache_vhost_file(konf=konf,apache=KATALOG_APACHE):
+    #otwiera plika ze zmienej
+    config = io.open(apache + konf['$domena'] ,'w')
+
+    #czyta linie z pliku
+    for line in io.open(konf['$$template_dir']+'apache.tpl','r'):
+        line = replace_all(line,konf)
+        config.write(line)
+
+    config.close()
+
+def activate(konf=konf):
+    #print KATALOG_APACHE+konf['$domena'] + '.conf'
+    #print KATALOG_APACHE+'symboliczny'+konf['$domena'] + '.conf'
+    #sh.ln('-s',KATALOG_APACHE+konf['$domena'] ,KATALOG_APACHE+'../sites-enable/'+konf['$domena'])
+    sh.a2ensite(konf['domena']
+    sh.ln('-s',KATALOG_NGINX+konf['$domena'] ,KATALOG_NGINX+'../sites-enable/'+konf['$domena'])
+
+
+dodawanie_katalogu()
+nginx_vhost_file(konf)
+apache_vhost_file(konf)
+activate()
